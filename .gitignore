@@ -13,3 +13,7 @@ arena/live/
 data/intraday_raw/
 data/intraday_processed/
 *.log
+
+# Java build output
+Java/**/out/
+*.class
