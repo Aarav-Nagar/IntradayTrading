@@ -69,7 +69,7 @@ export function AuthScreen({ onCreateAccount, onSignIn, onRequestPasswordReset, 
         ? "A few quick questions help personalize risk budgets, reminders, and market focus."
         : mode === "forgot"
           ? "Enter your email and the production app would send reset instructions."
-          : "Sign in to continue your local demo journal.";
+        : "Sign in to continue your cloud-backed risk workspace.";
 
   function submitSignIn() {
     onSignIn(form);
@@ -166,7 +166,7 @@ export function AuthScreen({ onCreateAccount, onSignIn, onRequestPasswordReset, 
       <Card style={styles.disclaimer}>
         <Text style={sharedText.mediumTitle}>Prototype account note</Text>
         <Text style={sharedText.bodyText}>
-          Accounts and profile answers are stored locally for now. Later this can move to Clerk and a real database.
+          Accounts and profile answers go through the API. Demo mode is in-memory only; production is designed for Clerk and MongoDB Atlas.
         </Text>
       </Card>
     </ScrollView>

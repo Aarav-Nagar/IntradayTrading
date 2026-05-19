@@ -26,9 +26,9 @@ export function ProfileScreen({ user, onSignOut }) {
           <Text style={sharedText.mediumTitle}>{user?.name || "Alex Trader"}</Text>
           <Text style={sharedText.bodyText}>{user?.email || "alex@example.com"}</Text>
         </View>
-        <Pill label="Demo Plan" tone="good" />
+        <Pill label="Cloud Ready" tone="good" />
       </Card>
-      <SettingsGroup title="Account" rows={[["Account Size", "$25,000"], ["Risk Budget", "5% ($1,250)"], ["Default Timeframe", "1-2 Weeks"]]} />
+      <SettingsGroup title="Account" rows={[["Account Size", money(user?.accountSize || 25000)], ["Risk Budget", `${user?.riskBudgetPercent || 2}%`], ["Default Timeframe", "1-2 Weeks"]]} />
       <SettingsGroup
         title="Trading Profile"
         rows={[
@@ -61,6 +61,10 @@ function summarize(values) {
     return "Not set";
   }
   return values.slice(0, 4).join(", ") + (values.length > 4 ? ` +${values.length - 4}` : "");
+}
+
+function money(value) {
+  return `$${Number(value || 0).toLocaleString()}`;
 }
 
 function SettingsGroup({ title, rows }) {

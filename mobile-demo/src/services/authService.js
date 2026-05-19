@@ -1,28 +1,16 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_BASE_URL } from "./config";
 
-const USERS_KEY = "options-risk-check:users";
-const SESSION_KEY = "options-risk-check:current-user";
+let memorySession = null;
 
 export async function restoreSession() {
-  const sessionJson = await AsyncStorage.getItem(SESSION_KEY);
-  return sessionJson ? JSON.parse(sessionJson) : null;
+  return memorySession;
 }
 
 export async function createAccount(profile) {
-  const { name, email, password } = profile;
-  const cleanEmail = email.trim().toLowerCase();
-  const users = await getUsers();
-  if (users.some((user) => user.email === cleanEmail)) {
-    throw new Error("An account with this email already exists.");
-  }
-  if (!name.trim() || !cleanEmail || password.length < 6) {
-    throw new Error("Use a name, valid email, and password with at least 6 characters.");
-  }
-
-  const user = {
-    id: `user-${Date.now()}`,
-    name: name.trim(),
-    email: cleanEmail,
+  const payload = {
+    name: profile.name,
+    email: profile.email,
+    password: profile.password,
     accountSize: Number(profile.accountSize || 25000),
     riskBudgetPercent: Number(profile.riskBudgetPercent || 2),
     purpose: profile.purpose || [],
@@ -34,58 +22,36 @@ export async function createAccount(profile) {
     sectors: profile.sectors || [],
     marketCaps: profile.marketCaps || [],
     events: profile.events || [],
-    safetyAccepted: Boolean(profile.safetyAccepted),
-    createdAt: new Date().toISOString()
+    safetyAccepted: Boolean(profile.safetyAccepted)
   };
-
-  const nextUsers = [...users, { ...user, password }];
-  await AsyncStorage.setItem(USERS_KEY, JSON.stringify(nextUsers));
-  await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  const user = await postJson("/auth/signup", payload);
+  memorySession = user;
   return user;
 }
 
 export async function signIn({ email, password }) {
-  const cleanEmail = email.trim().toLowerCase();
-  const users = await getUsers();
-  const record = users.find((user) => user.email === cleanEmail && user.password === password);
-  if (!record) {
-    throw new Error("Email or password did not match a demo account.");
-  }
-  const { password: _password, ...user } = record;
-  await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  const user = await postJson("/auth/signin", { email, password });
+  memorySession = user;
   return user;
 }
 
 export async function requestPasswordReset({ email }) {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes("@")) {
-    throw new Error("Enter the email you used for this demo account.");
-  }
-
-  const users = await getUsers();
-  const record = users.find((user) => user.email === cleanEmail);
-  return {
-    email: maskEmail(cleanEmail),
-    knownAccount: Boolean(record),
-    message:
-      "If this were connected to production auth, a reset link would be sent now. For this local demo, your account stays on this device."
-  };
+  return postJson("/auth/forgot-password", { email });
 }
 
 export async function signOut() {
-  await AsyncStorage.removeItem(SESSION_KEY);
+  memorySession = null;
 }
 
-function maskEmail(email) {
-  const [name, domain] = email.split("@");
-  if (!domain) {
-    return email;
+async function postJson(path, body) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.detail || "The account service is unavailable.");
   }
-  const visible = name.slice(0, 2);
-  return `${visible}${"*".repeat(Math.max(name.length - 2, 2))}@${domain}`;
-}
-
-async function getUsers() {
-  const usersJson = await AsyncStorage.getItem(USERS_KEY);
-  return usersJson ? JSON.parse(usersJson) : [];
+  return data;
 }

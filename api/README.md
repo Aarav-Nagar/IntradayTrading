@@ -1,8 +1,10 @@
 # Options Risk Check API
 
-Small FastAPI backend for the mobile demo.
+FastAPI backend for the mobile demo.
 
 This API intentionally returns educational risk-review JSON. It does not execute trades and does not return buy/sell instructions.
+
+Development mode uses an in-memory adapter. Production is designed for Clerk auth, MongoDB Atlas, Sentry, and an LLM provider configured through environment variables.
 
 ## Run
 
@@ -14,5 +16,21 @@ uvicorn api.app:app --reload --host 127.0.0.1 --port 8000
 ## Endpoints
 
 - `GET /health`
+- `POST /auth/signup`
+- `POST /auth/signin`
+- `POST /auth/forgot-password`
 - `POST /trade-check`
+- `GET /journal/{user_id}`
+- `POST /journal`
+- `POST /chat`
 
+## Environment
+
+```env
+APP_STORAGE_PROVIDER=demo
+MONGODB_URI=
+MONGODB_DATABASE=options_risk_check
+CLERK_SECRET_KEY=
+OPENAI_API_KEY=
+SENTRY_DSN=
+```

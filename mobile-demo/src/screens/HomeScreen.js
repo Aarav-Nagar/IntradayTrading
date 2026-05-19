@@ -43,6 +43,7 @@ export function HomeScreen({ user, draft, entries, stats, report, navigate }) {
           </Pressable>
         </View>
         <TaskRow icon="analytics-outline" label={report ? "Review the latest report" : "Run one risk check"} onPress={() => navigate(report ? "Report" : "Check")} />
+        <TaskRow icon="chatbubble-ellipses-outline" label="Ask AI about risk or options" onPress={() => navigate("Chat")} />
         <TaskRow icon="notifications-outline" label="Set a sizing reminder before entry" onPress={() => navigate("Alerts")} />
         <TaskRow icon="search-outline" label="Explore sectors and event focus" onPress={() => navigate("Search")} />
       </Card>

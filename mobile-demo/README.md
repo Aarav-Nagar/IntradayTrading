@@ -2,18 +2,19 @@
 
 Clickable Expo React Native prototype for the Options Risk Check app.
 
-This version is still a local demo, but it is structured like a real app. The screens use mock-backed service functions today, so the FastAPI backend can be connected screen by screen later.
+This version is still a demo, but it now talks to the FastAPI API for accounts, trade checks, journal saves, and chat. Demo mode is in-memory on the backend only; production is designed for Clerk and MongoDB Atlas.
 
 ## Run
 
 ```bash
 npm install
+npm run export:web
 npm run web
 ```
 
 Open the Expo web URL in a browser. The app renders inside a phone-sized frame so the layout can be reviewed from a laptop.
 
-To use the local API-backed trade check:
+Start the API first:
 
 ```bash
 cd ..
@@ -26,22 +27,21 @@ uvicorn api.app:app --host 127.0.0.1 --port 8000
 - Home: account snapshot, quick actions, latest journal note, and paths into the deeper tools.
 - Search: ticker entry plus sector, market-cap, and event focus from the user's profile.
 - Check: the raised center action for running an educational risk check.
-- Alerts: behavior and risk reminders.
+- Chat: educational AI sidecar for options and risk questions.
 - Profile: local demo account, preferences, and sign out.
 
-Report, Journal, Growth, Arena, and Learn are still in the app, but they now sit behind Home or the Check flow instead of crowding the bottom bar.
+Report, Journal, Growth, Arena, Learn, and Alerts are still in the app, but they now sit behind Home or the Check flow instead of crowding the bottom bar.
 
 ## Current behavior
 
 - First open starts at an account home page instead of the trading workflow.
-- Users can create a local demo account, sign in, request a demo password reset, persist a session, and sign out from Profile.
-- Demo accounts are stored locally on the device/browser for prototype review.
+- Users can create an API-backed demo account, sign in, request a demo password reset, and sign out from Profile.
+- Demo accounts are held in backend memory only unless production cloud services are configured.
 - The bottom navigation uses a five-item finance-app layout with a raised center risk-check action.
 - Check form values are editable.
-- Check This Trade generates a report from the current form state.
-- Trade checks call the local FastAPI endpoint when it is running and fall back to demo scoring when it is offline.
-- Save to Journal adds the current report to the journal for this session.
-- Journal entries persist locally across refreshes.
+- Check This Trade generates a dynamic decision brief with risk math, agent docket, agreement map, and pre-action questions.
+- Save to Journal sends the current report to the API.
+- Chat sends educational investing/options questions to the API.
 - Growth reads from journal entries and falls back to sample metrics when needed.
 - Arena shows the options-agent replay as an educational experiment.
 - The first-run disclaimer frames the app as educational risk review only.
@@ -60,6 +60,6 @@ src/
 
 ## Notes
 
-- No backend is required for this prototype.
+- The backend is required for account, journal, report, and chat flows.
 - No trade execution is included.
 - Language is framed as educational risk/context, not financial advice.

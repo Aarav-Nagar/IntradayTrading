@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppShell } from "./components/AppShell";
 import { Card } from "./components/Card";
 import { PrimaryButton, sharedText } from "./components/Shared";
@@ -16,11 +15,10 @@ import { ProfileScreen } from "./screens/ProfileScreen";
 import { ReportScreen } from "./screens/ReportScreen";
 import { AlertsScreen } from "./screens/AlertsScreen";
 import { SearchScreen } from "./screens/SearchScreen";
+import { ChatScreen } from "./screens/ChatScreen";
 import { createAccount, requestPasswordReset, restoreSession, signIn, signOut } from "./services/authService";
-import { generateTradeCheck, saveJournalEntry, summarizeGrowth } from "./services/apiClient";
+import { generateTradeCheck, listJournalEntries, saveJournalEntry, summarizeGrowth } from "./services/apiClient";
 import { palette } from "./theme/theme";
-
-const ONBOARDING_STORAGE_KEY = "options-risk-check:onboarding-seen";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -33,19 +31,18 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState("");
 
   const growthStats = useMemo(() => summarizeGrowth(journalEntries), [journalEntries]);
   const reportSaved = currentReport ? savedReportIds.includes(currentReport.id) : false;
-  const journalStorageKey = currentUser ? `options-risk-check:journal:${currentUser.id}` : null;
 
   useEffect(() => {
     let mounted = true;
     async function restoreState() {
       try {
-        const [session, onboardingSeen] = await Promise.all([restoreSession(), AsyncStorage.getItem(ONBOARDING_STORAGE_KEY)]);
+        const session = await restoreSession();
         if (!mounted) {
           return;
         }
@@ -58,7 +55,6 @@ export default function App() {
             riskBudget: Math.round((Number(session.accountSize || 25000) * Number(session.riskBudgetPercent || 2)) / 100)
           }));
         }
-        setShowOnboarding(onboardingSeen !== "true");
       } catch (err) {
         setShowOnboarding(true);
       } finally {
@@ -76,32 +72,32 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
     async function restoreJournal() {
-      if (!journalStorageKey) {
+      if (!currentUser) {
         return;
       }
-      const journalJson = await AsyncStorage.getItem(journalStorageKey);
-      if (mounted) {
-        setJournalEntries(journalJson ? JSON.parse(journalJson) : starterJournal);
+      try {
+        const entries = await listJournalEntries(currentUser);
+        if (mounted) {
+          setJournalEntries(entries.length ? entries : starterJournal);
+        }
+      } catch (err) {
+        if (mounted) {
+          setJournalEntries(starterJournal);
+        }
       }
     }
     restoreJournal();
     return () => {
       mounted = false;
     };
-  }, [journalStorageKey]);
-
-  useEffect(() => {
-    if (ready && journalStorageKey) {
-      AsyncStorage.setItem(journalStorageKey, JSON.stringify(journalEntries));
-    }
-  }, [journalEntries, journalStorageKey, ready]);
+  }, [currentUser]);
 
   async function handleTradeCheck() {
     setLoading(true);
     setError("");
     setSavedNotice("");
     try {
-      const nextReport = await generateTradeCheck(draft);
+      const nextReport = await generateTradeCheck(draft, currentUser);
       setCurrentReport(nextReport);
       setActiveTab("Report");
     } catch (err) {
@@ -120,7 +116,7 @@ export default function App() {
       setActiveTab("Journal");
       return;
     }
-    const entry = await saveJournalEntry(currentReport);
+    const entry = await saveJournalEntry(currentReport, currentUser);
     setJournalEntries((entries) => [entry, ...entries]);
     setSavedReportIds((ids) => [...ids, currentReport.id]);
     setSavedNotice("Saved to Journal");
@@ -128,7 +124,6 @@ export default function App() {
   }
 
   async function dismissOnboarding() {
-    await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
     setShowOnboarding(false);
   }
 
@@ -234,7 +229,10 @@ function enterApp(user) {
         <CheckScreen draft={draft} setDraft={setDraft} onCheck={handleTradeCheck} loading={loading} error={error} />
       )}
       {activeTab === "Alerts" && <AlertsScreen user={currentUser} stats={growthStats} navigate={setActiveTab} />}
-      {activeTab === "Report" && <ReportScreen report={currentReport} onSave={handleSaveReport} saved={reportSaved} />}
+      {activeTab === "Chat" && <ChatScreen user={currentUser} currentReport={currentReport} />}
+      {activeTab === "Report" && (
+        <ReportScreen report={currentReport} onSave={handleSaveReport} saved={reportSaved} onAskAi={() => setActiveTab("Chat")} />
+      )}
       {activeTab === "Journal" && (
         <JournalScreen entries={journalEntries} savedNotice={savedNotice} onNewCheck={() => setActiveTab("Check")} />
       )}

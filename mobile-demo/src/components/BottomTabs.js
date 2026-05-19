@@ -7,7 +7,7 @@ export const tabs = [
   ["Home", "home"],
   ["Search", "search"],
   ["Check", "location-outline"],
-  ["Alerts", "notifications-outline"],
+  ["Chat", "chatbubble-ellipses-outline"],
   ["Profile", "person-outline"]
 ];
 
@@ -16,7 +16,7 @@ export function BottomTabs({ activeTab, setActiveTab, disabledTabs = [] }) {
     <View style={styles.tabBar}>
       {tabs.map(([name, icon]) => {
         const isCenter = name === "Check";
-        const homeSubPages = ["Journal", "Growth", "Arena", "Learn"];
+        const homeSubPages = ["Journal", "Growth", "Arena", "Learn", "Alerts"];
         const isActive = activeTab === name || (isCenter && activeTab === "Report") || (name === "Home" && homeSubPages.includes(activeTab));
         return (
         <Pressable
