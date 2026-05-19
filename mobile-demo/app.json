@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Options Risk Check",
+    "slug": "options-risk-check",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "optionsriskcheck",
+    "userInterfaceStyle": "light",
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "ios": {
+      "supportsTablet": false
+    }
+  }
+}

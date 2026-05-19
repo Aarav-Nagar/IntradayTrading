@@ -1,6 +1,12 @@
 node_modules
 dist
 .env
+.expo/
+.expo-shared/
+mobile-demo/node_modules/
+mobile-demo/dist/
+mobile-demo/.expo/
+mobile-demo/.expo-shared/
 __pycache__/
 .pytest_cache/
 .venv/
