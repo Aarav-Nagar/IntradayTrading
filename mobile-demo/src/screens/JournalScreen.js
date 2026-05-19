@@ -9,7 +9,7 @@ import { palette } from "../theme/theme";
 export function JournalScreen({ entries, savedNotice, onNewCheck }) {
   return (
     <ScreenScroll>
-      <Header kicker="3. JOURNAL" title="Journal" subtitle="Track your checks and learn from outcomes." />
+      <Header title="Journal" subtitle="Track your checks and learn from outcomes." />
       {savedNotice ? (
         <View style={styles.notice}>
           <Text style={styles.noticeText}>{savedNotice}</Text>
@@ -109,4 +109,3 @@ const styles = StyleSheet.create({
     marginBottom: 8
   }
 });
-

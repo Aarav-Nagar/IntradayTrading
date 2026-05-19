@@ -10,14 +10,14 @@ export function ReportScreen({ report, onSave, saved }) {
   if (!report) {
     return (
       <ScreenScroll>
-        <Header kicker="2. REPORT" title="No report yet" subtitle="Run a check first to generate a trade report." />
+        <Header title="No report yet" subtitle="Run a check first to generate a trade report." />
       </ScreenScroll>
     );
   }
 
   return (
     <ScreenScroll>
-      <Header kicker="2. REPORT" title={report.title} subtitle={report.subtitle} right={<Pill label={report.badge} tone="good" />} />
+      <Header title={report.title} subtitle={report.subtitle} right={<Pill label={report.badge} tone="good" />} />
       <View style={styles.methodology}>
         <Text style={styles.methodologyText}>{report.methodologyLabel || "Educational risk review"} - not financial advice</Text>
       </View>

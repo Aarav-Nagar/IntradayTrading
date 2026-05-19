@@ -56,8 +56,33 @@ export async function signIn({ email, password }) {
   return user;
 }
 
+export async function requestPasswordReset({ email }) {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes("@")) {
+    throw new Error("Enter the email you used for this demo account.");
+  }
+
+  const users = await getUsers();
+  const record = users.find((user) => user.email === cleanEmail);
+  return {
+    email: maskEmail(cleanEmail),
+    knownAccount: Boolean(record),
+    message:
+      "If this were connected to production auth, a reset link would be sent now. For this local demo, your account stays on this device."
+  };
+}
+
 export async function signOut() {
   await AsyncStorage.removeItem(SESSION_KEY);
+}
+
+function maskEmail(email) {
+  const [name, domain] = email.split("@");
+  if (!domain) {
+    return email;
+  }
+  const visible = name.slice(0, 2);
+  return `${visible}${"*".repeat(Math.max(name.length - 2, 2))}@${domain}`;
 }
 
 async function getUsers() {

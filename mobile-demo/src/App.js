@@ -9,11 +9,14 @@ import { AuthScreen } from "./screens/AuthScreen";
 import { ArenaScreen } from "./screens/ArenaScreen";
 import { CheckScreen } from "./screens/CheckScreen";
 import { GrowthScreen } from "./screens/GrowthScreen";
+import { HomeScreen } from "./screens/HomeScreen";
 import { JournalScreen } from "./screens/JournalScreen";
 import { LearnScreen } from "./screens/LearnScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { ReportScreen } from "./screens/ReportScreen";
-import { createAccount, restoreSession, signIn, signOut } from "./services/authService";
+import { AlertsScreen } from "./screens/AlertsScreen";
+import { SearchScreen } from "./screens/SearchScreen";
+import { createAccount, requestPasswordReset, restoreSession, signIn, signOut } from "./services/authService";
 import { generateTradeCheck, saveJournalEntry, summarizeGrowth } from "./services/apiClient";
 import { palette } from "./theme/theme";
 
@@ -21,7 +24,7 @@ const ONBOARDING_STORAGE_KEY = "options-risk-check:onboarding-seen";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("Check");
+  const [activeTab, setActiveTab] = useState("Home");
   const [draft, setDraft] = useState(tradeDraft);
   const [currentReport, setCurrentReport] = useState(null);
   const [journalEntries, setJournalEntries] = useState(starterJournal);
@@ -161,8 +164,21 @@ export default function App() {
     setCurrentReport(null);
     setSavedReportIds([]);
     setSavedNotice("");
-    setActiveTab("Check");
+    setActiveTab("Home");
     setJournalEntries(starterJournal);
+  }
+
+  async function handlePasswordReset(form) {
+    setAuthLoading(true);
+    setAuthError("");
+    try {
+      return await requestPasswordReset(form);
+    } catch (err) {
+      setAuthError(err.message);
+      throw err;
+    } finally {
+      setAuthLoading(false);
+    }
   }
 
 function enterApp(user) {
@@ -173,7 +189,7 @@ function enterApp(user) {
     accountSize: user.accountSize || 25000,
     riskBudget: Math.round((Number(user.accountSize || 25000) * Number(user.riskBudgetPercent || 2)) / 100)
   }));
-  setActiveTab("Check");
+  setActiveTab("Home");
 }
 
   if (!ready) {
@@ -189,17 +205,35 @@ function enterApp(user) {
   if (!currentUser) {
     return (
       <AppShell showTabs={false}>
-        <AuthScreen onCreateAccount={handleCreateAccount} onSignIn={handleSignIn} loading={authLoading} error={authError} />
+        <AuthScreen
+          onCreateAccount={handleCreateAccount}
+          onSignIn={handleSignIn}
+          onRequestPasswordReset={handlePasswordReset}
+          loading={authLoading}
+          error={authError}
+        />
       </AppShell>
     );
   }
 
   return (
-    <AppShell activeTab={activeTab} setActiveTab={setActiveTab} disabledTabs={currentReport ? [] : ["Report"]}>
+    <AppShell activeTab={activeTab} setActiveTab={setActiveTab}>
       {showOnboarding ? <OnboardingNotice onDismiss={dismissOnboarding} /> : null}
+      {activeTab === "Home" && (
+        <HomeScreen
+          user={currentUser}
+          draft={draft}
+          entries={journalEntries}
+          stats={growthStats}
+          report={currentReport}
+          navigate={setActiveTab}
+        />
+      )}
+      {activeTab === "Search" && <SearchScreen user={currentUser} draft={draft} setDraft={setDraft} navigate={setActiveTab} />}
       {activeTab === "Check" && (
         <CheckScreen draft={draft} setDraft={setDraft} onCheck={handleTradeCheck} loading={loading} error={error} />
       )}
+      {activeTab === "Alerts" && <AlertsScreen user={currentUser} stats={growthStats} navigate={setActiveTab} />}
       {activeTab === "Report" && <ReportScreen report={currentReport} onSave={handleSaveReport} saved={reportSaved} />}
       {activeTab === "Journal" && (
         <JournalScreen entries={journalEntries} savedNotice={savedNotice} onNewCheck={() => setActiveTab("Check")} />

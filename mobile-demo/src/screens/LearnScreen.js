@@ -7,7 +7,7 @@ import { palette } from "../theme/theme";
 export function LearnScreen({ lessons }) {
   return (
     <ScreenScroll>
-      <Header kicker="6. LEARN" title="Learn" subtitle="Bite-sized lessons to level up your edge." />
+      <Header title="Learn" subtitle="Bite-sized lessons to level up your edge." />
       <ChipRow items={["All", "Options Basics", "Risk", "Strategy", "Psychology"]} active="All" />
       {lessons.map(([title, text, time], index) => (
         <Card style={styles.lessonCard} key={title}>

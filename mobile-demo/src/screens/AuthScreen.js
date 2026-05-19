@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Card } from "../components/Card";
 import { Field, PrimaryButton, SecondaryButton, sharedText } from "../components/Shared";
 import { palette } from "../theme/theme";
@@ -31,9 +32,10 @@ const eventOptions = ["Earnings", "Product launches", "FDA/healthcare catalysts"
 
 const steps = ["Account", "Purpose", "Risk", "Market", "Safety"];
 
-export function AuthScreen({ onCreateAccount, onSignIn, loading, error }) {
+export function AuthScreen({ onCreateAccount, onSignIn, onRequestPasswordReset, loading, error }) {
   const [mode, setMode] = useState("home");
   const [step, setStep] = useState(0);
+  const [resetMessage, setResetMessage] = useState("");
   const [form, setForm] = useState({
     name: "Alex Trader",
     email: "alex@example.com",
@@ -52,16 +54,35 @@ export function AuthScreen({ onCreateAccount, onSignIn, loading, error }) {
     safetyAccepted: false
   });
 
-  const title = mode === "signup" ? "Set up your account" : mode === "signin" ? "Welcome back" : "Options Risk Check";
+  const title =
+    mode === "signup"
+      ? "Set up your account"
+      : mode === "signin"
+        ? "Welcome back"
+        : mode === "forgot"
+          ? "Reset access"
+          : "Options Risk Check";
   const subtitle =
     mode === "home"
-      ? "A calm green-and-white workspace for checking options risk before decisions."
+      ? "A calmer way to check options risk, track decisions, and learn from your own behavior."
       : mode === "signup"
         ? "A few quick questions help personalize risk budgets, reminders, and market focus."
-        : "Sign in to continue your local demo journal.";
+        : mode === "forgot"
+          ? "Enter your email and the production app would send reset instructions."
+          : "Sign in to continue your local demo journal.";
 
   function submitSignIn() {
     onSignIn(form);
+  }
+
+  async function submitPasswordReset() {
+    setResetMessage("");
+    try {
+      const response = await onRequestPasswordReset({ email: form.email });
+      setResetMessage(`${response.email}: ${response.message}`);
+    } catch (err) {
+      setResetMessage("");
+    }
   }
 
   function nextStep() {
@@ -75,9 +96,13 @@ export function AuthScreen({ onCreateAccount, onSignIn, loading, error }) {
   return (
     <ScrollView style={styles.authWrap} contentContainerStyle={styles.authContent} showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
-        <Text style={styles.brand}>Options Risk Check</Text>
+        <View style={styles.brandPill}>
+          <Ionicons name="shield-checkmark-outline" size={16} color={palette.green} />
+          <Text style={styles.brand}>Options Risk Check</Text>
+        </View>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
+        {mode === "home" ? <HeroPreview /> : null}
       </View>
 
       {mode === "home" ? (
@@ -87,6 +112,11 @@ export function AuthScreen({ onCreateAccount, onSignIn, loading, error }) {
             <Text style={sharedText.bodyText}>
               Build a profile, review options risk, save checks, and learn from your decision history.
             </Text>
+            <View style={styles.heroStats}>
+              <MiniStat label="Risk" value="2.0%" />
+              <MiniStat label="Journal" value="Saved" />
+              <MiniStat label="Mode" value="Learn" />
+            </View>
           </Card>
           <PrimaryButton label="Create Account" onPress={() => setMode("signup")} />
           <SecondaryButton label="Sign In" onPress={() => setMode("signin")} />
@@ -97,7 +127,23 @@ export function AuthScreen({ onCreateAccount, onSignIn, loading, error }) {
           <Field label="Password" value={form.password} onChangeText={(password) => setForm({ ...form, password })} />
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <PrimaryButton label={loading ? "Signing In..." : "Sign In"} onPress={submitSignIn} disabled={loading} />
+          <Pressable style={styles.textButton} onPress={() => setMode("forgot")}>
+            <Text style={styles.textButtonText}>Forgot password?</Text>
+          </Pressable>
           <SecondaryButton label="Back" onPress={() => setMode("home")} />
+        </Card>
+      ) : mode === "forgot" ? (
+        <Card>
+          <Field label="Email" value={form.email} onChangeText={(email) => setForm({ ...form, email })} />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {resetMessage ? (
+            <View style={styles.successBox}>
+              <Ionicons name="mail-outline" size={18} color={palette.green} />
+              <Text style={styles.successText}>{resetMessage}</Text>
+            </View>
+          ) : null}
+          <PrimaryButton label={loading ? "Sending..." : "Send Reset Link"} onPress={submitPasswordReset} disabled={loading} />
+          <SecondaryButton label="Back to Sign In" onPress={() => setMode("signin")} />
         </Card>
       ) : (
         <Card>
@@ -124,6 +170,39 @@ export function AuthScreen({ onCreateAccount, onSignIn, loading, error }) {
         </Text>
       </Card>
     </ScrollView>
+  );
+}
+
+function HeroPreview() {
+  return (
+    <View style={styles.previewShell}>
+      <View style={styles.previewHeader}>
+        <View>
+          <Text style={styles.previewTiny}>Setup quality</Text>
+          <Text style={styles.previewScore}>72</Text>
+        </View>
+        <View style={styles.previewBadge}>
+          <Text style={styles.previewBadgeText}>Low drag</Text>
+        </View>
+      </View>
+      <View style={styles.previewLine}>
+        <View style={[styles.previewLineFill, { width: "78%" }]} />
+      </View>
+      <View style={styles.previewRows}>
+        <Text style={styles.previewCheck}>OK Sizing</Text>
+        <Text style={styles.previewCheck}>OK Volatility</Text>
+        <Text style={styles.previewWarn}>! Expiry risk</Text>
+      </View>
+    </View>
+  );
+}
+
+function MiniStat({ label, value }) {
+  return (
+    <View style={styles.miniStat}>
+      <Text style={styles.miniLabel}>{label}</Text>
+      <Text style={styles.miniValue}>{value}</Text>
+    </View>
   );
 }
 
@@ -252,13 +331,25 @@ const styles = StyleSheet.create({
     paddingVertical: 18
   },
   hero: {
-    marginBottom: 18
+    marginBottom: 18,
+    alignItems: "center"
+  },
+  brandPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    borderWidth: 1,
+    borderColor: "#CFEFD8",
+    backgroundColor: "#F3FFF6",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    marginBottom: 12
   },
   brand: {
     color: palette.green,
     fontWeight: "900",
-    textAlign: "center",
-    marginBottom: 10
+    textAlign: "center"
   },
   title: {
     color: palette.dark,
@@ -275,6 +366,104 @@ const styles = StyleSheet.create({
   valueCard: {
     backgroundColor: "#FBFFFC"
   },
+  heroStats: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 14
+  },
+  miniStat: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#DDEFE2",
+    borderRadius: 14,
+    padding: 10
+  },
+  miniLabel: {
+    color: palette.muted,
+    fontSize: 10,
+    fontWeight: "800"
+  },
+  miniValue: {
+    color: palette.green,
+    fontSize: 13,
+    fontWeight: "900",
+    marginTop: 3
+  },
+  previewShell: {
+    width: "100%",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#DDF1E2",
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    marginTop: 16,
+    shadowColor: "#16351D",
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 }
+  },
+  previewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  previewTiny: {
+    color: palette.muted,
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  previewScore: {
+    color: palette.dark,
+    fontSize: 30,
+    fontWeight: "900"
+  },
+  previewBadge: {
+    backgroundColor: palette.greenSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 999
+  },
+  previewBadgeText: {
+    color: palette.green,
+    fontSize: 11,
+    fontWeight: "900"
+  },
+  previewLine: {
+    height: 9,
+    backgroundColor: "#EEF4EF",
+    borderRadius: 999,
+    overflow: "hidden",
+    marginTop: 12
+  },
+  previewLineFill: {
+    height: "100%",
+    backgroundColor: "#8AC94B"
+  },
+  previewRows: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12
+  },
+  previewCheck: {
+    color: palette.green,
+    backgroundColor: "#F3FFF6",
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    fontSize: 10,
+    fontWeight: "900"
+  },
+  previewWarn: {
+    color: palette.amber,
+    backgroundColor: palette.amberSoft,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    fontSize: 10,
+    fontWeight: "900"
+  },
   disclaimer: {
     marginTop: 12,
     backgroundColor: "#F6FFF8",
@@ -285,6 +474,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     marginBottom: 10
+  },
+  textButton: {
+    alignItems: "center",
+    paddingVertical: 12
+  },
+  textButtonText: {
+    color: palette.green,
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  successBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "#F3FFF6",
+    borderWidth: 1,
+    borderColor: "#CFEFD8",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12
+  },
+  successText: {
+    flex: 1,
+    color: palette.dark,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
   },
   stepHeader: {
     flexDirection: "row",
@@ -374,4 +590,3 @@ const styles = StyleSheet.create({
     lineHeight: 17
   }
 });
-

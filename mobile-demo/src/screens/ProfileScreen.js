@@ -17,7 +17,7 @@ export function ProfileScreen({ user, onSignOut }) {
 
   return (
     <ScreenScroll>
-      <Header kicker="7. PROFILE" title="Profile" subtitle="Manage your account and settings." />
+      <Header title="Profile" subtitle="Manage your account and settings." />
       <Card style={styles.profileHero}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>

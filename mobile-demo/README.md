@@ -21,21 +21,22 @@ pip install -r api/requirements.txt
 uvicorn api.app:app --host 127.0.0.1 --port 8000
 ```
 
-## Screens
+## Main Navigation
 
-- Check
-- Report
-- Journal
-- Growth
-- Arena
-- Learn
-- Profile
+- Home: account snapshot, quick actions, latest journal note, and paths into the deeper tools.
+- Search: ticker entry plus sector, market-cap, and event focus from the user's profile.
+- Check: the raised center action for running an educational risk check.
+- Alerts: behavior and risk reminders.
+- Profile: local demo account, preferences, and sign out.
+
+Report, Journal, Growth, Arena, and Learn are still in the app, but they now sit behind Home or the Check flow instead of crowding the bottom bar.
 
 ## Current behavior
 
 - First open starts at an account home page instead of the trading workflow.
-- Users can create a local demo account, sign in, persist a session, and sign out from Profile.
+- Users can create a local demo account, sign in, request a demo password reset, persist a session, and sign out from Profile.
 - Demo accounts are stored locally on the device/browser for prototype review.
+- The bottom navigation uses a five-item finance-app layout with a raised center risk-check action.
 - Check form values are editable.
 - Check This Trade generates a report from the current form state.
 - Trade checks call the local FastAPI endpoint when it is running and fall back to demo scoring when it is offline.

@@ -14,7 +14,6 @@ export function CheckScreen({ draft, setDraft, onCheck, loading, error }) {
   return (
     <ScreenScroll>
       <Header
-        kicker="1. CHECK"
         title={`Good morning, ${draft.user}`}
         subtitle="Let's make smarter trade decisions."
         right={<Text style={styles.bell}>!</Text>}

@@ -8,7 +8,7 @@ import { palette } from "../theme/theme";
 export function ArenaScreen({ arena }) {
   return (
     <ScreenScroll>
-      <Header kicker="5. ARENA" title="Options Agent Replay" subtitle="Replay the experiment that shaped the app." />
+      <Header title="Options Agent Replay" subtitle="Replay the experiment that shaped the app." />
       <ChipRow items={["Overview", "Equity Curves", "Agents", "Results"]} active="Overview" />
       <Card>
         <Text style={sharedText.sectionTitle}>Equity Curve Comparison</Text>
@@ -55,4 +55,3 @@ const styles = StyleSheet.create({
     backgroundColor: "#FBFFFC"
   }
 });
-

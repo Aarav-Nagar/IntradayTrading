@@ -8,7 +8,7 @@ import { palette } from "../theme/theme";
 export function GrowthScreen({ stats }) {
   return (
     <ScreenScroll>
-      <Header kicker="4. GROWTH" title="Growth" subtitle="Track performance and behavioral insights." right={<Text style={styles.bell}>cal</Text>} />
+      <Header title="Growth" subtitle="Track performance and behavioral insights." right={<Text style={styles.bell}>cal</Text>} />
       <ChipRow items={["1W", "1M", "3M", "6M", "1Y", "All"]} active="3M" />
       <Card>
         <Text style={sharedText.cardLabel}>Account Curve</Text>
@@ -61,4 +61,3 @@ const styles = StyleSheet.create({
     gap: 10
   }
 });
-
